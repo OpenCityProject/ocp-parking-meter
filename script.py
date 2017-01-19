@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import sys
+import os
 
 class ParkingMeter:
     categories = ["Get Back to Nature", "Within 2km", "Give Back to Community", "Today only", "Weekly"]
@@ -13,7 +14,13 @@ class ParkingMeter:
 
     def display(self, text):
         # for now just print to console
-        print text
+        # print text
+        # try echo to console
+        os.system("echo '" + text + "'")
+        # try echo to ttyACM0
+        os.system("echo '" + text + "' > test.text")
+        os.system("echo '" + text + "' > /dev/ttyACM0")
+
 
     def get_choice(self):
         return input("Your choice: ") # change this to receive input from buttons on parking machine
