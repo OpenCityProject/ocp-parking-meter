@@ -1,9 +1,11 @@
 #!/usr/bin/python
 import sys
-import os
+import subprocess
+import serial
 
 class ParkingMeter:
     categories = ["Get Back to Nature", "Within 2km", "Give Back to Community", "Today only", "Weekly"]
+    ser = ""
 
     def send_request(self, category, latitude, longitude):
         # just print instead of sending get request for now
@@ -14,13 +16,9 @@ class ParkingMeter:
 
     def display(self, text):
         # for now just print to console
-        # print text
-        # try echo to console
-        os.system("echo '" + text + "'")
-        # try echo to ttyACM0
-        os.system("echo '" + text + "' > test.text")
-        os.system("echo '" + text + "' > /dev/ttyACM0")
-
+        print text
+        # try send to serial
+        self.ser.write(text + "\n")
 
     def get_choice(self):
         return input("Your choice: ") # change this to receive input from buttons on parking machine
@@ -40,6 +38,8 @@ class ParkingMeter:
             self.display("Sorry, invalid choice")
 
     def start(self):
+        self.ser = serial.Serial('/dev/ttyACM0', 115200)
+        self.ser.write("\xFE\x42")
         self.display("Welcome to Open City! Please choose a category and hit enter:")
         for index, item in enumerate(self.categories, start = 1):
             self.display("{0}) {1}".format(index, item))
@@ -51,6 +51,8 @@ class ParkingMeter:
             self.make_poi_selection(poi_list)
         else:
             self.display("Sorry, you chose an invalid category")
+        self.ser.write("\xFE\x46")
+        self.ser.close()
 
 instance = ParkingMeter()
 instance.start()
