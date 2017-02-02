@@ -1,4 +1,4 @@
-#!/usr/bin/python
+    #!/usr/bin/python
 import sys
 import subprocess
 import serial
@@ -18,7 +18,8 @@ class ParkingMeter:
         # for now just print to console
         print text
         # try send to serial
-        self.ser.write(text + "\n")
+        self.ser.write(text)
+        self.ser.write("\x0A")
 
     def get_choice(self):
         return input("Your choice: ") # change this to receive input from buttons on parking machine
