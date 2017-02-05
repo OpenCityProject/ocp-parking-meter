@@ -1,25 +1,30 @@
     #!/usr/bin/python
+import json
 import sys
 import subprocess
-import serial
+#import serial
+import urllib2
 
 class ParkingMeter:
     categories = ["Get Back to Nature", "Within 2km", "Give Back to Community", "Today only", "Weekly"]
     ser = ""
+    debug = True
+    #debug = False
+
 
     def send_request(self, category, latitude, longitude):
         # just print instead of sending get request for now
         print "Sending request with parameters {{ category: {0}, latitude: {1}, longitude: {2} }}".format(category, latitude, longitude)
-        # await response from server
-        poi_list = ["Cathedral Square", "Cantebury Museum", "Botanic Gardens"] # mock response for now
+        response = json.loads(urllib2.urlopen("http://opencityproject.australiasoutheast.cloudapp.azure.com/v1/poi?lat=0&long=0").read())
+        poi_list = list(poi.get("name") for poi in response)
         return poi_list
 
     def display(self, text):
         # for now just print to console
         print text
         # try send to serial
-        self.ser.write(text)
-        self.ser.write("\x0A")
+        if self.debug == False: self.ser.write(text)
+        if self.debug == False: self.ser.write("\x0A")
 
     def get_choice(self):
         return input("Your choice: ") # change this to receive input from buttons on parking machine
@@ -39,8 +44,8 @@ class ParkingMeter:
             self.display("Sorry, invalid choice")
 
     def start(self):
-        self.ser = serial.Serial('/dev/ttyACM0', 115200)
-        self.ser.write("\xFE\x42")
+        if self.debug == False: elf.ser = serial.Serial('/dev/ttyACM0', 115200)
+        if self.debug == False: self.ser.write("\xFE\x42")
         self.display("Welcome to Open City! Please choose a category and hit enter:")
         for index, item in enumerate(self.categories, start = 1):
             self.display("{0}) {1}".format(index, item))
@@ -52,8 +57,8 @@ class ParkingMeter:
             self.make_poi_selection(poi_list)
         else:
             self.display("Sorry, you chose an invalid category")
-        self.ser.write("\xFE\x46")
-        self.ser.close()
+        if self.debug == False: self.ser.write("\xFE\x46")
+        if self.debug == False: self.ser.close()
 
 instance = ParkingMeter()
 instance.start()
