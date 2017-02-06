@@ -9,15 +9,20 @@ class ParkingMeter:
     categories = ["Get Back to Nature", "Within 2km", "Give Back to Community", "Today only", "Weekly"]
     ser = ""
     debug = True
+    base_url = "http://opencityproject.australiasoutheast.cloudapp.azure.com/v1"
     #debug = False
 
 
     def send_request(self, category, latitude, longitude):
         # just print instead of sending get request for now
         print "Sending request with parameters {{ category: {0}, latitude: {1}, longitude: {2} }}".format(category, latitude, longitude)
-        response = json.loads(urllib2.urlopen("http://opencityproject.australiasoutheast.cloudapp.azure.com/v1/poi?lat=0&long=0").read())
+        response = json.loads(urllib2.urlopen(self.base_url + "/poi?lat=0&long=0&radiusInMetre=1000000000000").read())
         poi_list = list(poi.get("name") for poi in response)
         return poi_list
+
+    def get_categories(self):
+        response = json.loads(urllib2.urlopen(self.base_url + "/category").read())
+        self.categories = list(category.get("name") for category in response)
 
     def display(self, text):
         # for now just print to console
@@ -46,6 +51,7 @@ class ParkingMeter:
     def start(self):
         if self.debug == False: elf.ser = serial.Serial('/dev/ttyACM0', 115200)
         if self.debug == False: self.ser.write("\xFE\x42")
+        self.get_categories()
         self.display("Welcome to Open City! Please choose a category and hit enter:")
         for index, item in enumerate(self.categories, start = 1):
             self.display("{0}) {1}".format(index, item))
