@@ -2,11 +2,12 @@
 import sys
 import subprocess
 import serial
+import cups
 
 class ParkingMeter:
     categories = ["Get Back to Nature", "Within 2km", "Give Back to Community", "Today only", "Weekly"]
     ser = ""
-    printer_serial = ""
+    printers = {}
 
     def send_request(self, category, latitude, longitude):
         # just print instead of sending get request for now
@@ -27,8 +28,11 @@ class ParkingMeter:
 
     def print_ticket(self, poi):
         print "Printing ticket for " + poi
-        #send to printer
-        self.printer_serial.write("Ticket for: " + poi)
+        # create ticket file
+        f = open("ticket.txt",'w')
+        f.write('Ticket for: ' + poi)
+        printer_name=self.printers.keys()[0]
+        #conn.printFile (printer_name, file, "Ticket", {})
 
     def make_poi_selection(self, poi_list):
         for index, item in enumerate(poi_list, start = 1):
@@ -42,7 +46,8 @@ class ParkingMeter:
             self.display("Sorry, invalid choice")
 
     def start(self):
-        self.printer_serial = serial.Serial('/dev/ttyUSB0', 19200)
+        printer_conn = cups.Connection()
+        self.printers = printer_conn.getPrinters()
         self.ser = serial.Serial('/dev/ttyACM0', 115200)
         self.ser.write("\xFE\x42")
         self.display("Welcome to Open City! Please choose a category and hit enter:")
@@ -58,7 +63,6 @@ class ParkingMeter:
             self.display("Sorry, you chose an invalid category")
         self.ser.write("\xFE\x46")
         self.ser.close()
-        self.printer_serial.close();
 
 instance = ParkingMeter()
 instance.start()
