@@ -30,8 +30,9 @@ class ParkingMeter:
         print "Printing ticket for " + poi
         # create ticket file
         self.printer.justify('C')
-        self.printer.setSize('L')
+        self.printer.setSize('M')
         self.printer.println("Open City")
+        self.printer.feed(1)
         self.printer.setSize('S')
         self.printer.underlineOn()
         self.printer.println("Sharing sweet free things to do")
@@ -41,13 +42,11 @@ class ParkingMeter:
         self.printer.println("It is: " + poi)
         self.printer.println("The Canterbury Museum is a museum located in the central city of Christchurch, New Zealand in the city's Cultural Precinct")
         self.printer.println("Open today: 9am-5pm")
-        self.printer.feed(3)
+        self.printer.feed(2)
         import gfx.adaqrcode as adaqrcode
         self.printer.printBitmap(adaqrcode.width, adaqrcode.height, adaqrcode.data)
-        self.printer.feed(1)
         self.printer.setSize('S')
         self.printer.println("For more info and to share your sweet free thing, see opencity.co.nz")
-        self.printer.feed(1)
         self.printer.sleep()      # Tell printer to sleep
         self.printer.wake()       # Call wake() before printing again, even if reset
         self.printer.setDefault() # Restore printer to defaults
