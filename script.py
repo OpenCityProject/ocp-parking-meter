@@ -13,7 +13,7 @@ class ParkingMeter:
         # just print instead of sending get request for now
         print "Sending request with parameters {{ category: {0}, latitude: {1}, longitude: {2} }}".format(category, latitude, longitude)
         # await response from server
-        poi_list = ["Cathedral Square", "Cantebury Museum", "Botanic Gardens"] # mock response for now
+        poi_list = ["Cathedral Square", "Canterbury Museum", "Botanic Gardens"] # mock response for now
         return poi_list
 
     def display(self, text):
@@ -31,28 +31,26 @@ class ParkingMeter:
         # create ticket file
         self.printer.justify('C')
         self.printer.setSize('L')
-        self.printer.boldOn()
-        self.printer.println(poi)
-        self.printer.boldOff()
-        self.printer.setSize('M')
+        self.printer.println("Open City")
+        self.printer.setSize('S')
+        self.printer.underlineOn()
+        self.printer.println("Sharing sweet free things to do")
+        self.printer.underlineOff()
         self.printer.justify('L')
-        self.printer.println("Time: 9:00am")
-        self.printer.println("Location: 24 Quay Street, Christchurch")
-        self.printer.feed(1)
+        self.printer.println("Wesley's sweet free thing is 5 mins walk at Rolleston Ave")
+        self.printer.println("It is: " + poi)
+        self.printer.println("The Canterbury Museum is a museum located in the central city of Christchurch, New Zealand in the city's Cultural Precinct")
+        self.printer.println("Open today: 9am-5pm")
+        self.printer.feed(3)
         import gfx.adaqrcode as adaqrcode
         self.printer.printBitmap(adaqrcode.width, adaqrcode.height, adaqrcode.data)
-        self.printer.println("Adafruit!")
         self.printer.feed(1)
-
         self.printer.setSize('S')
-        self.printer.justify('R')
-        self.printer.println("This ticket is from the Open City Project")
+        self.printer.println("For more info and to share your sweet free thing, see opencity.co.nz")
         self.printer.feed(1)
-
         self.printer.sleep()      # Tell printer to sleep
         self.printer.wake()       # Call wake() before printing again, even if reset
         self.printer.setDefault() # Restore printer to defaults
-
 
     def make_poi_selection(self, poi_list):
         for index, item in enumerate(poi_list, start = 1):
