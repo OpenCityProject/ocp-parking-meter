@@ -30,7 +30,7 @@ class ParkingMeter:
         print "Printing ticket for " + poi
         # create ticket file
         f = open("ticket.txt",'w')
-        f.write('Ticket for: ' + poi)
+        f.write('Ticket for: {0} \n'.format(poi))
         printer_name=self.printers.keys()[0]
         #conn.printFile (printer_name, file, "Ticket", {})
 
