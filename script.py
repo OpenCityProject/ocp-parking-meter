@@ -34,7 +34,7 @@ class ParkingMeter:
         self.printer.boldOn()
         self.printer.println(poi)
         self.printer.boldOff()
-        self.printer.printer.setSize('M')
+        self.printer.setSize('M')
         self.printer.justify('L')
         self.printer.println("Time: 9:00am")
         self.printer.println("Location: 24 Quay Street, Christchurch")
@@ -44,7 +44,7 @@ class ParkingMeter:
         self.printer.println("Adafruit!")
         self.printer.feed(1)
 
-        self.printer.printer.setSize('S')
+        self.printer.setSize('S')
         self.printer.justify('R')
         self.printer.println("This ticket is from the Open City Project")
         self.printer.feed(1)
