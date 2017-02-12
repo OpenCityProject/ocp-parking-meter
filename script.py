@@ -2,12 +2,12 @@
 import sys
 import subprocess
 import serial
-import cups
+from Adafruit_Thermal import *
 
 class ParkingMeter:
     categories = ["Get Back to Nature", "Within 2km", "Give Back to Community", "Today only", "Weekly"]
     ser = ""
-    printers = {}
+    printer = ""
 
     def send_request(self, category, latitude, longitude):
         # just print instead of sending get request for now
@@ -29,10 +29,30 @@ class ParkingMeter:
     def print_ticket(self, poi):
         print "Printing ticket for " + poi
         # create ticket file
-        f = open("ticket.txt",'w')
-        f.write('Ticket for: {0} \n'.format(poi))
-        printer_name=self.printers.keys()[0]
-        #conn.printFile (printer_name, file, "Ticket", {})
+        self.printer.justify('C')
+        self.printer.setSize('L')
+        self.printer.boldOn()
+        self.printer.println(poi)
+        self.printer.boldOff()
+        self.printer.printer.setSize('M')
+        self.printer.justify('L')
+        self.printer.println("Time: 9:00am")
+        self.printer.println("Location: 24 Quay Street, Christchurch")
+        self.printer.feed(1)
+        import gfx.adaqrcode as adaqrcode
+        self.printer.printBitmap(adaqrcode.width, adaqrcode.height, adaqrcode.data)
+        self.printer.println("Adafruit!")
+        self.printer.feed(1)
+
+        self.printer.printer.setSize('S')
+        self.printer.justify('R')
+        self.printer.println("This ticket is from the Open City Project")
+        self.printer.feed(1)
+
+        self.printer.sleep()      # Tell printer to sleep
+        self.printer.wake()       # Call wake() before printing again, even if reset
+        self.printer.setDefault() # Restore printer to defaults
+
 
     def make_poi_selection(self, poi_list):
         for index, item in enumerate(poi_list, start = 1):
@@ -46,8 +66,8 @@ class ParkingMeter:
             self.display("Sorry, invalid choice")
 
     def start(self):
-        printer_conn = cups.Connection()
-        self.printers = printer_conn.getPrinters()
+        self.printer = Adafruit_Thermal("/dev/ttyUSB0", 19200, timeout=5)
+        self.printer.setDefault()
         self.ser = serial.Serial('/dev/ttyACM0', 115200)
         self.ser.write("\xFE\x42")
         self.display("Welcome to Open City! Please choose a category and hit enter:")
