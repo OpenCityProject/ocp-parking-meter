@@ -1,27 +1,38 @@
     #!/usr/bin/python
+import json
 import sys
 import subprocess
-import serial
-from Adafruit_Thermal import *
+# import serial
+# from Adafruit_Thermal import *
+import urllib2
 
 class ParkingMeter:
     categories = ["Get Back to Nature", "Within 2km", "Give Back to Community", "Today only", "Weekly"]
     ser = ""
     printer = ""
+    debug = True
+    base_url = "http://opencityproject.australiasoutheast.cloudapp.azure.com/v1"
+    #debug = False
 
     def send_request(self, category, latitude, longitude):
         # just print instead of sending get request for now
         print "Sending request with parameters {{ category: {0}, latitude: {1}, longitude: {2} }}".format(category, latitude, longitude)
         # await response from server
-        poi_list = ["Cathedral Square", "Canterbury Museum", "Botanic Gardens"] # mock response for now
+        # poi_list = ["Cathedral Square", "Canterbury Museum", "Botanic Gardens"] # mock response for now
+        response = json.loads(urllib2.urlopen(self.base_url + "/poi-by-category?lat=0&long=0&radiusInMetre=1000000000000&category=" + category).read())
+        poi_list = list(poi.get("name") for poi in response)
         return poi_list
+
+    def get_categories(self):
+        response = json.loads(urllib2.urlopen(self.base_url + "/category").read())
+        self.categories = response;
 
     def display(self, text):
         # for now just print to console
         print text
         # try send to serial
-        self.ser.write(text)
-        self.ser.write("\x0A")
+        if self.debug == False: self.ser.write(text)
+        if self.debug == False: self.ser.write("\x0A")
 
     def get_choice(self):
         return input("Your choice: ") # change this to receive input from buttons on parking machine
@@ -63,23 +74,24 @@ class ParkingMeter:
             self.display("Sorry, invalid choice")
 
     def start(self):
-        self.printer = Adafruit_Thermal("/dev/ttyUSB0", 19200, timeout=5)
-        self.printer.setDefault()
-        self.ser = serial.Serial('/dev/ttyACM0', 115200)
-        self.ser.write("\xFE\x42")
+        if self.debug == False: self.printer = Adafruit_Thermal("/dev/ttyUSB0", 19200, timeout=5)
+        if self.debug == False: self.printer.setDefault()
+        if self.debug == False: elf.ser = serial.Serial('/dev/ttyACM0', 115200)
+        if self.debug == False: self.ser.write("\xFE\x42")
+        self.get_categories()
         self.display("Welcome to Open City! Please choose a category and hit enter:")
         for index, item in enumerate(self.categories, start = 1):
-            self.display("{0}) {1}".format(index, item))
+            self.display("{0}) {1}".format(index, item.get("name")))
         sys.stdout.flush()
         choice = self.get_choice()
         if choice > 0 and choice <= len(self.categories):
-            print "You chose " + self.categories[choice-1] # for debugging
-            poi_list = self.send_request(self.categories[choice-1], 0.00, 0.00)
+            print "You chose " + self.categories[choice-1].get("name") # for debugging
+            poi_list = self.send_request(self.categories[choice-1].get("id"), 0.00, 0.00)
             self.make_poi_selection(poi_list)
         else:
             self.display("Sorry, you chose an invalid category")
-        self.ser.write("\xFE\x46")
-        self.ser.close()
+        if self.debug == False: self.ser.write("\xFE\x46")
+        if self.debug == False: self.ser.close()
 
 instance = ParkingMeter()
 instance.start()
