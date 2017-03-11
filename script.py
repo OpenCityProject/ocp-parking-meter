@@ -10,9 +10,9 @@ class ParkingMeter:
     categories = ["Get Back to Nature", "Within 2km", "Give Back to Community", "Today only", "Weekly"]
     ser = ""
     printer = ""
-    debug = True
     base_url = "http://opencityproject.australiasoutheast.cloudapp.azure.com/v1"
     #debug = False
+    debug = True
 
     def send_request(self, category, latitude, longitude):
         # just print instead of sending get request for now
@@ -20,7 +20,7 @@ class ParkingMeter:
         # await response from server
         # poi_list = ["Cathedral Square", "Canterbury Museum", "Botanic Gardens"] # mock response for now
         response = json.loads(urllib2.urlopen(self.base_url + "/poi-by-category?lat=0&long=0&radiusInMetre=1000000000000&category=" + category).read())
-        poi_list = list(poi.get("name") for poi in response)
+        poi_list = response
         return poi_list
 
     def get_categories(self):
@@ -38,7 +38,9 @@ class ParkingMeter:
         return input("Your choice: ") # change this to receive input from buttons on parking machine
 
     def print_ticket(self, poi):
-        print "Printing ticket for " + poi
+        print "\n{0}'s sweet free thing is at {1}".format(poi.get("author"), poi.get("address"))
+        print "It is: " + poi.get("name")
+        print "It is sweet because: " + poi.get("description")
         # create ticket file
         self.printer.justify('C')
         self.printer.setSize('M')
@@ -49,10 +51,10 @@ class ParkingMeter:
         self.printer.println("Sharing sweet free things to do")
         self.printer.underlineOff()
         self.printer.justify('L')
-        self.printer.println("Wesley's sweet free thing is 5 mins walk at Rolleston Ave")
-        self.printer.println("It is: " + poi)
-        self.printer.println("The Canterbury Museum is a museum located in the central city of Christchurch, New Zealand in the city's Cultural Precinct")
-        self.printer.println("Open today: 9am-5pm")
+        self.printer.println("{0}'s sweet free thing is at {1}".format(poi.get("author"), poi.get("address")))
+        self.printer.println("It is: " + poi.get("name"))
+        self.printer.println("It is sweet because: " + poi.get("description"))
+        self.printer.println("Open today: TODO")
         self.printer.feed(2)
         import gfx.adaqrcode as adaqrcode
         self.printer.printBitmap(adaqrcode.width, adaqrcode.height, adaqrcode.data)
@@ -63,20 +65,23 @@ class ParkingMeter:
         self.printer.setDefault() # Restore printer to defaults
 
     def make_poi_selection(self, poi_list):
-        for index, item in enumerate(poi_list, start = 1):
-            self.display("{0}) {1}".format(index, item))
-        sys.stdout.flush()
-        self.display("Please choose an option: ")
-        choice = self.get_choice()
-        if choice > 0 and choice <= len(poi_list):
-            self.print_ticket(poi_list[choice-1])
+        if len(poi_list) == 0:
+            self.display("Sorry, nothing found for that category")
         else:
-            self.display("Sorry, invalid choice")
+            for index, item in enumerate(poi_list, start = 1):
+                self.display("{0}) {1}".format(index, item.get("name")))
+            sys.stdout.flush()
+            self.display("Please choose an option: ")
+            choice = self.get_choice()
+            if choice > 0 and choice <= len(poi_list):
+                self.print_ticket(poi_list[choice-1])
+            else:
+                self.display("Sorry, invalid choice")
 
     def start(self):
         if self.debug == False: self.printer = Adafruit_Thermal("/dev/ttyUSB0", 19200, timeout=5)
         if self.debug == False: self.printer.setDefault()
-        if self.debug == False: elf.ser = serial.Serial('/dev/ttyACM0', 115200)
+        if self.debug == False: self.ser = serial.Serial('/dev/ttyACM0', 115200)
         if self.debug == False: self.ser.write("\xFE\x42")
         self.get_categories()
         self.display("Welcome to Open City! Please choose a category and hit enter:")
