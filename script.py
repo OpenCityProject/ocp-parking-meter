@@ -6,6 +6,8 @@ import subprocess
 # from Adafruit_Thermal import *
 import urllib2
 
+button = {'SELECT': 1, 'NEXT': 2, 'CANCEL': 3};
+
 class ParkingMeter:
     categories = ["Get Back to Nature", "Within 2km", "Give Back to Community", "Today only", "Weekly"]
     ser = ""
@@ -34,8 +36,14 @@ class ParkingMeter:
         if self.debug == False: self.ser.write(text)
         if self.debug == False: self.ser.write("\x0A")
 
+    def newLCDPage(self, numberOfLinesRemaining):
+        for i in range(numberOfLinesRemaining):
+            if self.debug == False: self.ser.write("\x0A")
+            print ""
+        
+
     def get_choice(self):
-        return input("Your choice: ") # change this to receive input from buttons on parking machine
+        return input("") # change this to receive input from buttons on parking machine
 
     def print_ticket(self, poi):
         print "\n{0}'s sweet free thing is at {1}".format(poi.get("author"), poi.get("address"))
@@ -66,35 +74,89 @@ class ParkingMeter:
 
     def make_poi_selection(self, poi_list):
         if len(poi_list) == 0:
+            print "============================================="
             self.display("Sorry, nothing found for that category")
+            self.newLCDPage(3)
+            print "============================================="
         else:
-            for index, item in enumerate(poi_list, start = 1):
-                self.display("{0}) {1}".format(index, item.get("name")))
-            sys.stdout.flush()
-            self.display("Please choose an option: ")
-            choice = self.get_choice()
-            if choice > 0 and choice <= len(poi_list):
-                self.print_ticket(poi_list[choice-1])
-            else:
-                self.display("Sorry, invalid choice")
+            starting_poi_pointer = 0
+            ending_poi_pointer = 3
+            choice = 2
+            pois_length = len(poi_list)
+            init = True
+            while choice == 2:
+                print "=============================================" # category screen
+                if init == True:
+                     self.display("Select an option:")
+                for i in range(starting_poi_pointer, ending_poi_pointer):
+                    select_marker = " <" if i == starting_poi_pointer else ""
+                    self.display("{0}) {1}{2}".format(i%pois_length+1, poi_list[i%pois_length].get("name"), select_marker))
+                print "============================================="
+                sys.stdout.flush()
+                choice = self.get_choice()
+                starting_poi_pointer += 1
+                ending_poi_pointer += 1
+                if init == True:
+                    ending_poi_pointer += 1 # add 1 more after initial screen page
+                init = False
+
+            if choice == 3: # Cancel
+                return
+            
+            if choice == 1:
+                self.print_ticket(poi_list[starting_poi_pointer-1])
 
     def start(self):
+        print "=============================================="
+        print "For cmd line testing, please type one of the keys below, then hit enter:"
+        print "Key: '1' = Select Button"
+        print "Key: '2' = Next Button"
+        print "Key: '3' = Cancel Button"
+        print "Press any of these to start (LCD backlight should be off until button pressed)"
+        print "=============================================="
+        sys.stdout.flush()        
         if self.debug == False: self.printer = Adafruit_Thermal("/dev/ttyUSB0", 19200, timeout=5)
         if self.debug == False: self.printer.setDefault()
         if self.debug == False: self.ser = serial.Serial('/dev/ttyACM0', 115200)
         if self.debug == False: self.ser.write("\xFE\x42")
         self.get_categories()
-        self.display("Welcome to Open City! Please choose a category and hit enter:")
-        for index, item in enumerate(self.categories, start = 1):
-            self.display("{0}) {1}".format(index, item.get("name")))
+        self.get_choice()
         sys.stdout.flush()
-        choice = self.get_choice()
-        if choice > 0 and choice <= len(self.categories):
-            print "You chose " + self.categories[choice-1].get("name") # for debugging
-            poi_list = self.send_request(self.categories[choice-1].get("id"), 0.00, 0.00)
+        print "============================================="
+        self.display("Welcome to Open City") # 20 characters
+        self.display("Select a category:") # 19 characters
+        self.display("(Press next)")
+        self.newLCDPage(1)
+        print "============================================="
+        sys.stdout.flush()
+        
+        choice = 0
+        while choice != button['SELECT'] and choice != button['NEXT']: # either select or next button will progress to the initial category screen
+            choice = self.get_choice()
+
+        starting_category_pointer = 0
+        ending_category_pointer = 4
+        choice = 2
+        categories_length = len(self.categories)
+        while choice == 2:
+            print "=============================================" # category screen
+            for i in range(starting_category_pointer, ending_category_pointer):
+                select_marker = " <" if i == starting_category_pointer else ""
+                self.display("{0}) {1}{2}".format(i%categories_length+1, self.categories[i%categories_length].get("name"), select_marker))
+            print "============================================="
+            sys.stdout.flush()
+            choice = self.get_choice()
+            starting_category_pointer += 1
+            ending_category_pointer += 1
+
+        if choice == 3: # Cancel
+            return
+
+        if choice == 1:
+            print "You chose " + self.categories[starting_category_pointer-1].get("name")
+            poi_list = self.send_request(self.categories[starting_category_pointer-1].get("id"), 0.00, 0.00)
             self.make_poi_selection(poi_list)
-        else:
-            self.display("Sorry, you chose an invalid category")
+       
         if self.debug == False: self.ser.write("\xFE\x46")
         if self.debug == False: self.ser.close()
 
