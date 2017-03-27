@@ -12,7 +12,7 @@ class ParkingMeter:
     categories = ["Get Back to Nature", "Within 2km", "Give Back to Community", "Today only", "Weekly"]
     ser = ""
     printer = ""
-    base_url = "http://opencityproject.australiasoutheast.cloudapp.azure.com/v1"
+    base_url = "http://opencityproject.australiasoutheast.cloudapp.azure.com:38080/v1"
     #debug = False
     debug = True
 
