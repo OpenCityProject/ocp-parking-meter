@@ -6,7 +6,7 @@ command = ""
 actual = 'ser' in vars()
 
 while command != "q":
-    print "Command: (q, on, off, b, c, t, clr):"
+    print "Command: (q, on, off, b, c, t, clr, n):"
     sys.stdout.flush()
     command = raw_input("")
     print("Your command was: " + command)
@@ -33,7 +33,15 @@ while command != "q":
         sys.stdout.flush()
         text = raw_input("")
         if actual == True: ser.write(text)
+        if actual == True: ser.write("\x0A")
+        #if actual == True: ser.write("_" * (20 - len(text))))
         print("sending to serial: " + text)
+    elif command == "n":
+        if actual == True: ser.write("\x0A")
+        print("\x0A")
     elif command == "clr":
         if actual == True: ser.write("\xFE\x58")
         print("\xFE\x58")
+
+    sys.stdout.flush()
+        

@@ -29,14 +29,19 @@ class ParkingMeter:
         response = json.loads(urllib2.urlopen(self.base_url + "/category").read())
         self.categories = response;
 
+    def newLine(self, previousText):
+        if self.debug == False: self.ser.write("\x0A")
+    #    if self.debug == False: self.ser.write("_" * (20 - len(previousText))))
+
     def display(self, text):
         # for now just print to console
         print text
         # try send to serial
         if self.debug == False: self.ser.write(text)
-        if self.debug == False: self.ser.write("\x0A")
+        self.newLine(text)
 
     def newLCDPage(self, numberOfLinesRemaining):
+        # self.ser.write("\xFE\x58")
         for i in range(numberOfLinesRemaining):
             if self.debug == False: self.ser.write("\x0A")
             print ""
