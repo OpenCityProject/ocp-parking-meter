@@ -1,10 +1,23 @@
-    #!/usr/bin/python
+#!/usr/bin/python
 import json
 import sys
 import subprocess
 # import serial
 # from Adafruit_Thermal import *
 import urllib2
+
+# This script is used to call the api then return choices to the user and display on LCD
+# User first selects from a list of pre-defined categories
+# Script will then make an api call to retrieve all nearby POIs of that category
+# User can then select one of the POIs and machine will print a ticket
+#
+# > python script.py
+# 
+# Requires the base_url to be working and hosting the open city api - this is currently down so script will fail..
+#
+# Note: Uncomment the "import" lines and set debug=False when running on the actual rpi
+# Note: Currently having problems with line wrapping and new line printing on the LCD display
+# Note: Also, the buttons have not been integrated yet, so this script relies on keyboard input solely for now
 
 button = {'SELECT': 1, 'NEXT': 2, 'CANCEL': 3};
 
@@ -112,6 +125,7 @@ class ParkingMeter:
                 self.print_ticket(poi_list[starting_poi_pointer-1])
 
     def start(self):
+        print "Note: Set debug=False and uncomment import lines when testing on real rpi"
         print "=============================================="
         print "For cmd line testing, please type one of the keys below, then hit enter:"
         print "Key: '1' = Select Button"
