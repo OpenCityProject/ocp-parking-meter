@@ -2,9 +2,14 @@
 import json
 import sys
 import subprocess
+import urllib2
+import threading
 # import serial
 # from Adafruit_Thermal import *
-import urllib2
+# import RPi.GPIO as GPIO
+# GPIO.setmode(GPIO.BCM)  
+# # GPIO 23 set up as input. It is pulled up to stop false signals  
+# GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
 
 # This script is used to call the api then return choices to the user and display on LCD
 # User first selects from a list of pre-defined categories
@@ -28,6 +33,8 @@ class ParkingMeter:
     base_url = "http://opencityproject.australiasoutheast.cloudapp.azure.com:38080/v1"
     #debug = False
     debug = True
+    buttonPressed = 0
+    trigger = threading.Event()
 
     def send_request(self, category, latitude, longitude):
         # just print instead of sending get request for now
@@ -60,9 +67,28 @@ class ParkingMeter:
         #     if self.debug == False: self.ser.write("\x0A")
         #     print ""
         
+    def buttonOnePressed(self):
+        self.buttonPressed = 1
+        self.trigger.set()
+
+    def buttonTwoPressed(self):
+        self.buttonPressed = 2
+        self.trigger.set()
+        
+    def buttonThreePressed(self):
+        self.buttonPressed = 3
+        self.trigger.set()
 
     def get_choice(self):
-        return input("") # change this to receive input from buttons on parking machine
+        if self.debug == False:
+            GPIO.add_event_detect(17, GPIO.RISING, callback=buttonOnePressed)  
+            GPIO.add_event_detect(23, GPIO.RISING, callback=buttonTwoPressed)  
+            GPIO.add_event_detect(24, GPIO.RISING, callback=buttonThreePressed) 
+            self.trigger.wait()
+            self.trigger.clear()
+            return self.buttonPressed
+        else:
+            return input("") # change this to receive input from buttons on parking machine
 
     def print_ticket(self, poi):
         self.newLCDPage(1)
@@ -122,63 +148,75 @@ class ParkingMeter:
                 self.print_ticket(poi_list[i-1])
 
     def start(self):
-        print "Note: Set debug=False and uncomment import lines when testing on real rpi"
-        print "=============================================="
-        print "For cmd line testing, please type one of the keys below, then hit enter:"
-        print "Key: '1' = Select Button"
-        print "Key: '2' = Next Button"
-        print "Key: '3' = Cancel Button"
-        print "Press any of these to start (LCD backlight should be off until button pressed)"
-        print "=============================================="
-        sys.stdout.flush()        
-        if self.debug == False: self.printer = Adafruit_Thermal("/dev/ttyUSB0", 19200, timeout=5)
-        if self.debug == False: self.printer.setDefault()
-        if self.debug == False: self.ser = serial.Serial('/dev/ttyACM0', 115200)
-        if self.debug == False: self.ser.write("\xFE\x42")
-        self.get_categories()
-        self.get_choice()
-        sys.stdout.flush()
-        self.newLCDPage(1)
-        print "============================================="
-        self.newLCDPage(1)
-        self.display("Welcome to OCP!    ")
-        self.display("Please select a    ")
-        self.display("category:")
-        print "============================================="
-        sys.stdout.flush()
-        
-        choice = 0
-        while choice != button['SELECT'] and choice != button['NEXT']: # either select or next button will progress to the initial category screen
-            choice = self.get_choice()
-
-        starting_category_pointer = 0
-        choice = 2
-        categories_length = len(self.categories)
-        i = 0
-        while choice == 2:
+        try:
+            print "Note: Set debug=False and uncomment import lines when testing on real rpi"
+            print "=============================================="
+            print "For cmd line testing, please type one of the keys below, then hit enter:"
+            print "Key: '1' = Select Button"
+            print "Key: '2' = Next Button"
+            print "Key: '3' = Cancel Button"
+            print "Press any of these to start (LCD backlight should be off until button pressed)"
+            print "=============================================="
+            sys.stdout.flush()        
+            if self.debug == False: self.printer = Adafruit_Thermal("/dev/ttyUSB0", 19200, timeout=5)
+            if self.debug == False: self.printer.setDefault()
+            if self.debug == False: self.ser = serial.Serial('/dev/ttyACM0', 115200)
+            if self.debug == False: self.ser.write("\xFE\x42")
+            self.get_categories()
+            self.get_choice()
+            sys.stdout.flush()
             self.newLCDPage(1)
-            print "=============================================" # category screen
-            self.display("{0}) {1}".format(i+1, self.categories[i].get("name")))
+            print "============================================="
+            self.newLCDPage(1)
+            self.display("Welcome to OCP!    ")
+            self.display("Please select a    ")
+            self.display("category:")
             print "============================================="
             sys.stdout.flush()
-            if i == categories_length - 1:
-                i = 0
-            else:
-                i += 1
-            choice = self.get_choice()
+            
+            choice = 0
+            while choice != button['SELECT'] and choice != button['NEXT']: # either select or next button will progress to the initial category screen
+                choice = self.get_choice()
 
-        if choice == 3: # Cancel
-            self.newLCDPage(1)
-            return
+            starting_category_pointer = 0
+            choice = 2
+            categories_length = len(self.categories)
+            i = 0
+            while choice == 2:
+                self.newLCDPage(1)
+                print "=============================================" # category screen
+                self.display("{0}) {1}".format(i+1, self.categories[i].get("name")))
+                print "============================================="
+                sys.stdout.flush()
+                if i == categories_length - 1:
+                    i = 0
+                else:
+                    i += 1
+                choice = self.get_choice()
 
-        if choice == 1:
-            print "You chose " + self.categories[i-1].get("name")
-            poi_list = self.send_request(self.categories[i-1].get("id"), 0.00, 0.00)
-            self.make_poi_selection(poi_list)
-            self.newLCDPage(1)
+            if choice == 3: # Cancel
+                self.newLCDPage(1)
+                return
+
+            if choice == 1:
+                print "You chose " + self.categories[i-1].get("name")
+                poi_list = self.send_request(self.categories[i-1].get("id"), 0.00, 0.00)
+                self.make_poi_selection(poi_list)
+                self.newLCDPage(1)
        
+        except KeyboardInterrupt, Exception:
+            print ("ctrl c pressed")
+            self.newLCDPage(1)
+            if self.debug == False: self.ser.write("\xFE\x46")
+            if self.debug == False: self.ser.close()
+            if self.debug == False: GPIO.cleanup()# clean up GPIO
+        
+        print ("Program exiting normally")        
+        self.newLCDPage(1)
         if self.debug == False: self.ser.write("\xFE\x46")
         if self.debug == False: self.ser.close()
+        if self.debug == False: GPIO.cleanup()# clean up GPIO
+        
 
 instance = ParkingMeter()
 instance.start()
