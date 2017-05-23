@@ -8,7 +8,9 @@ import threading
 # import RPi.GPIO as GPIO
 # GPIO.setmode(GPIO.BCM)  
 # # GPIO 23 set up as input. It is pulled up to stop false signals  
+# GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
 # GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
+# GPIO.setup(24, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
 
 # This script is used to call the api then return choices to the user and display on LCD
 # User first selects from a list of pre-defined categories
