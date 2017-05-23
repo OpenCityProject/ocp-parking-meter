@@ -3,12 +3,12 @@ import json
 import sys
 import urllib2
 import threading
-# import serial
-# from Adafruit_Thermal import *
-# import RPi.GPIO as GPIO
-# GPIO.setmode(GPIO.BCM)  
-# # GPIO 23 set up as input. It is pulled up to stop false signals  
-# GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
+import serial
+from Adafruit_Thermal import *
+import RPi.GPIO as GPIO
+GPIO.setmode(GPIO.BCM)  
+# GPIO 23 set up as input. It is pulled up to stop false signals  
+GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
 
 # This script is used to call the api then return choices to the user and display on LCD
 # User first selects from a list of pre-defined categories
@@ -30,10 +30,10 @@ class ParkingMeter:
     ser = ""
     printer = ""
     base_url = "http://opencityproject.australiasoutheast.cloudapp.azure.com:38080/v1"
-    #debug = False
-    debug = True
-    #buttonDebug = False
-    buttonDebug = True
+    debug = False
+    #debug = True
+    buttonDebug = False
+    #buttonDebug = True
     buttonPressed = 0
     trigger = threading.Event()
 
