@@ -1,7 +1,6 @@
 #!/usr/bin/python
 import json
 import sys
-import subprocess
 import urllib2
 import threading
 # import serial
@@ -33,6 +32,8 @@ class ParkingMeter:
     base_url = "http://opencityproject.australiasoutheast.cloudapp.azure.com:38080/v1"
     #debug = False
     debug = True
+    #buttonDebug = False
+    buttonDebug = True
     buttonPressed = 0
     trigger = threading.Event()
 
@@ -80,10 +81,10 @@ class ParkingMeter:
         self.trigger.set()
 
     def get_choice(self):
-        if self.debug == False:
-            GPIO.add_event_detect(17, GPIO.RISING, callback=buttonOnePressed)  
-            GPIO.add_event_detect(23, GPIO.RISING, callback=buttonTwoPressed)  
-            GPIO.add_event_detect(24, GPIO.RISING, callback=buttonThreePressed) 
+        if self.buttonDebug == False:
+            GPIO.add_event_detect(17, GPIO.RISING, callback=self.buttonOnePressed)  
+            GPIO.add_event_detect(23, GPIO.RISING, callback=self.buttonTwoPressed)  
+            GPIO.add_event_detect(24, GPIO.RISING, callback=self.buttonThreePressed) 
             self.trigger.wait()
             self.trigger.clear()
             return self.buttonPressed
