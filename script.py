@@ -43,18 +43,19 @@ class ParkingMeter:
         # just print instead of sending get request for now
         print "Sending request with parameters {{ category: {0}, latitude: {1}, longitude: {2} }}".format(category, latitude, longitude)
         # await response from server
-        # poi_list = ["Cathedral Square", "Canterbury Museum", "Botanic Gardens"] # mock response for now
-        response = json.loads(urllib2.urlopen(self.base_url + "/poi-by-category?lat=0&long=0&radiusInMetre=1000000000000&category=" + category).read())
-        poi_list = response
+        poi_list = [{"name": "Bebop - light sculpture by Bill Culbert"}, {"name": "Garden next to Peacock Fountain"}, {"name": "Kate Sheppard Memorial to Women's Suffrage"}] # mock response for now
+        #response = json.loads(urllib2.urlopen(self.base_url + "/poi-by-category?lat=0&long=0&radiusInMetre=1000000000000&category=" + category).read())
+        #poi_list = response
         return poi_list
 
     def get_categories(self):
-        response = json.loads(urllib2.urlopen(self.base_url + "/category").read())
+        #response = json.loads(urllib2.urlopen(self.base_url + "/category").read())
+        response = [{"name": "Connect with Others"}, {"name": "Savour the Moment"}, {"name": "Play/Be Active"}, {"name": "Keep Learning"}, {"name": "Make a Difference"}]
         self.categories = response;
 
     def newLine(self, previousText):
-    #    if self.debug == False: self.ser.write("\x0A")
-        if self.debug == False: self.ser.write(" " * (20 - len(previousText)))
+        if self.debug == False: self.ser.write("\x0D")
+     #   if self.debug == False: self.ser.write(" " * (20 - len(previousText)))
 
     def display(self, text):
         # for now just print to console
@@ -96,9 +97,9 @@ class ParkingMeter:
     def print_ticket(self, poi):
         self.newLCDPage(1)
         self.display("Printing.....")
-        print "\n{0}'s sweet free thing is at {1}".format(poi.get("author"), poi.get("address"))
+        print "\n{0}'s sweet free thing is at {1}".format("Bob", "1 Queen Street")
         print "It is: " + poi.get("name")
-        print "It is sweet because: " + poi.get("description")
+        print "It is sweet because: It is pretty cool"
         # create ticket file
         self.printer.justify('C')
         self.printer.setSize('M')
@@ -109,9 +110,9 @@ class ParkingMeter:
         self.printer.println("Sharing sweet free things to do")
         self.printer.underlineOff()
         self.printer.justify('L')
-        self.printer.println("{0}'s sweet free thing is at {1}".format(poi.get("author"), poi.get("address")))
+        self.printer.println("{0}'s sweet free thing is at {1}".format("Bob", "1 Queen Street"))
         self.printer.println("It is: " + poi.get("name"))
-        self.printer.println("It is sweet because: " + poi.get("description"))
+        self.printer.println("It is sweet because: It is pretty cool")
         self.printer.println("Open today: TODO")
         self.printer.feed(2)
         import gfx.adaqrcode as adaqrcode
@@ -171,8 +172,8 @@ class ParkingMeter:
             self.newLCDPage(1)
             print "============================================="
             self.newLCDPage(1)
-            self.display("Welcome to OCP!    ")
-            self.display("Please select a    ")
+            self.display("Welcome to OCP!")
+            self.display("Please select a")
             self.display("category:")
             print "============================================="
             sys.stdout.flush()
