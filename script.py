@@ -25,7 +25,7 @@ GPIO.setup(24, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 # Note: Currently having problems with line wrapping and new line printing on the LCD display
 # Note: Also, the buttons have not been integrated yet, so this script relies on keyboard input solely for now
 
-button = {'SELECT': 1, 'NEXT': 2, 'CANCEL': 3};
+button = {'START': 1, 'IDEA': 2, 'PRINT': 3};
 
 class ParkingMeter:
     categories = ["Get Back to Nature", "Within 2km", "Give Back to Community", "Today only", "Weekly"]
@@ -57,14 +57,15 @@ class ParkingMeter:
         if self.debug == False: self.ser.write("\x0D")
      #   if self.debug == False: self.ser.write(" " * (20 - len(previousText)))
 
-    def display(self, text):
+    def display(self, text, newLine):
         # for now just print to console
         print text
         # try send to serial
         if self.debug == False: self.ser.write(text)
-        self.newLine(text)
+        if newLine == True: self.newLine(text)
 
-    def newLCDPage(self, numberOfLinesRemaining):
+    def newLCDPage(self):
+        print("============== NEW PAGE =================")
         if self.debug == False: self.ser.write("\xFE\x58")
         # self.ser.write("\xFE\x58")
         # for i in range(numberOfLinesRemaining):
@@ -85,138 +86,114 @@ class ParkingMeter:
 
     def get_choice(self):
         if self.buttonDebug == False:
+            self.trigger.clear()
             GPIO.add_event_detect(17, GPIO.RISING, callback=self.buttonOnePressed)  
             GPIO.add_event_detect(23, GPIO.RISING, callback=self.buttonTwoPressed)  
             GPIO.add_event_detect(24, GPIO.RISING, callback=self.buttonThreePressed) 
             self.trigger.wait()
-            self.trigger.clear()
             return self.buttonPressed
         else:
             return input("") # change this to receive input from buttons on parking machine
 
     def print_ticket(self, poi):
-        self.newLCDPage(1)
-        self.display("Printing.....")
+        self.newLCDPage()
+        self.display("Printing.....", True)
         print "\n{0}'s sweet free thing is at {1}".format("Bob", "1 Queen Street")
         print "It is: " + poi.get("name")
         print "It is sweet because: It is pretty cool"
-        # create ticket file
-        self.printer.justify('C')
-        self.printer.setSize('M')
-        self.printer.println("Open City")
-        self.printer.feed(1)
-        self.printer.setSize('S')
-        self.printer.underlineOn()
-        self.printer.println("Sharing sweet free things to do")
-        self.printer.underlineOff()
-        self.printer.justify('L')
-        self.printer.println("{0}'s sweet free thing is at {1}".format("Bob", "1 Queen Street"))
-        self.printer.println("It is: " + poi.get("name"))
-        self.printer.println("It is sweet because: It is pretty cool")
-        self.printer.println("Open today: TODO")
-        self.printer.feed(2)
-        import gfx.adaqrcode as adaqrcode
-        self.printer.printBitmap(adaqrcode.width, adaqrcode.height, adaqrcode.data)
-        self.printer.setSize('S')
-        self.printer.println("For more info and to share your sweet free thing, see opencity.co.nz")
-        self.printer.sleep()      # Tell printer to sleep
-        self.printer.wake()       # Call wake() before printing again, even if reset
-        self.printer.setDefault() # Restore printer to defaults
+        sys.stdout.flush()
+        if self.debug == False:
+            self.printer.wake()       # Call wake() before printing again, even if reset
+            self.printer.setDefault() # Restore printer to defaults
+            # create ticket file
+            self.printer.justify('C')
+            self.printer.setSize('M')
+            self.printer.println("Open City")
+            self.printer.feed(1)
+            self.printer.setSize('S')
+            self.printer.underlineOn()
+            self.printer.println("Sharing sweet free things to do")
+            self.printer.underlineOff()
+            self.printer.justify('L')
+            self.printer.println("{0}'s sweet free thing is at {1}".format("Bob", "1 Queen Street"))
+            self.printer.println("It is: " + poi.get("name"))
+            self.printer.println("It is sweet because: It is pretty cool")
+            self.printer.println("Open today: TODO")
+            self.printer.feed(2)
+            import gfx.adaqrcode as adaqrcode
+            self.printer.printBitmap(adaqrcode.width, adaqrcode.height, adaqrcode.data)
+            self.printer.setSize('S')
+            self.printer.println("For more info and to share your sweet free thing, see opencity.co.nz")
+            self.printer.sleep()# Tell printer to sleep
 
-    def make_poi_selection(self, poi_list):
-        if len(poi_list) == 0:
-            print "============================================="
-            self.display("Sorry, nothing found for that category")
-            self.newLCDPage(3)
-            print "============================================="
+    def sleep_state(self):
+        print "ENTERING SLEEP STATE"
+        sys.stdout.flush()
+        choice = self.get_choice()
+        # initially wake up screen if any button is pressed
+        self.welcome_state()            
+
+    def welcome_state(self):
+        print "ENTERING WELCOME STATE"
+        if self.debug == False: self.ser.write("\xFE\x42")
+        self.newLCDPage()
+        print "============================================="
+        self.display("Welcome to the", True)
+        self.display("Open City Project!", True)
+        self.display("Sharing sweet", True)
+        self.display("things to do", False)
+        print "============================================="
+        sys.stdout.flush()
+        choice = self.get_choice()
+        if choice == button["IDEA"]:
+            self.idea_state(0)
         else:
-            i = 0
-            choice = 2
-            pois_length = len(poi_list)
-            while choice == 2:
-                print "=============================================" # category screen
-                self.newLCDPage(3)
-                self.display("{0}) {1}".format(i+1, poi_list[i].get("name")))
-                print "============================================="
-                sys.stdout.flush()
-                if i == pois_length - 1:
-                    i = 0
-                else:
-                    i += 1
-                choice = self.get_choice()
+            self.welcome_state()
 
-            if choice == 3: # Cancel
-                return
+    def idea_state(self, pointer):
+        print "ENTERING IDEA STATE"
+        self.newLCDPage()
+        poi_list = [{"name": "Bebop - light sculpture by Bill Culbert"}, {"name": "Garden next to Peacock Fountain"}, {"name": "Kate Sheppard Memorial to Women's Suffrage"}] # mock response for now
+        self.display(poi_list[pointer].get("name"), False)
+        sys.stdout.flush()
+        nextPointer = pointer + 1
+        if nextPointer >= len(poi_list):
+            nextPointer = 0
+        choice = self.get_choice()
+        if choice == button["IDEA"]:
+            self.idea_state(nextPointer)
+        elif choice == button["PRINT"]:
+            self.print_ticket(poi_list[pointer])
+            self.sleep_state()
+        else:
+            self.welcome_state()
             
-            if choice == 1:
-                self.print_ticket(poi_list[i-1])
-
     def start(self):
         try:
             print "Note: Set debug=False and uncomment import lines when testing on real rpi"
             print "=============================================="
             print "For cmd line testing, please type one of the keys below, then hit enter:"
-            print "Key: '1' = Select Button"
-            print "Key: '2' = Next Button"
-            print "Key: '3' = Cancel Button"
+            print "Key: '1' = START button"
+            print "Key: '2' = IDEA Button"
+            print "Key: '3' = PRINT Button"
             print "Press any of these to start (LCD backlight should be off until button pressed)"
             print "=============================================="
             sys.stdout.flush()        
             if self.debug == False: self.printer = Adafruit_Thermal("/dev/ttyUSB0", 19200, timeout=5)
             if self.debug == False: self.printer.setDefault()
             if self.debug == False: self.ser = serial.Serial('/dev/ttyACM0', 115200)
-            if self.debug == False: self.ser.write("\xFE\x42")
-            self.get_categories()
-            self.get_choice()
-            sys.stdout.flush()
-            self.newLCDPage(1)
-            print "============================================="
-            self.newLCDPage(1)
-            self.display("Welcome to OCP!")
-            self.display("Please select a")
-            self.display("category:")
-            print "============================================="
-            sys.stdout.flush()
-            
-            choice = 0
-            while choice != button['SELECT'] and choice != button['NEXT']: # either select or next button will progress to the initial category screen
-                choice = self.get_choice()
 
-            starting_category_pointer = 0
-            choice = 2
-            categories_length = len(self.categories)
-            i = 0
-            while choice == 2:
-                self.newLCDPage(1)
-                print "=============================================" # category screen
-                self.display("{0}) {1}".format(i+1, self.categories[i].get("name")))
-                print "============================================="
-                sys.stdout.flush()
-                if i == categories_length - 1:
-                    i = 0
-                else:
-                    i += 1
-                choice = self.get_choice()
-
-            if choice == 3: # Cancel
-                self.newLCDPage(1)
-                return
-
-            if choice == 1:
-                print "You chose " + self.categories[i-1].get("name")
-                poi_list = self.send_request(self.categories[i-1].get("id"), 0.00, 0.00)
-                self.make_poi_selection(poi_list)
-                self.newLCDPage(1)
+            self.sleep_state()
        
         except KeyboardInterrupt, Exception:
             print ("ctrl c pressed")
-            self.newLCDPage(1)
+            self.newLCDPage()
             if self.debug == False: self.ser.write("\xFE\x46")
             if self.debug == False: self.ser.close()
             if self.debug == False: GPIO.cleanup()# clean up GPIO
         
         print ("Program exiting normally")        
-        self.newLCDPage(1)
+        self.newLCDPage()
         if self.debug == False: self.ser.write("\xFE\x46")
         if self.debug == False: self.ser.close()
         if self.debug == False: GPIO.cleanup()# clean up GPIO

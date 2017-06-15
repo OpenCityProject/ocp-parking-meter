@@ -62,9 +62,9 @@ while command != "q":
         print("sending to serial: " + text)
         print("\x0A")
     elif command == "n":
-      #  if actual == True: ser.write("\x0A")
-        if actual == True: ser.write(" " * 20)
-        print("\x0A")
+        if actual == True: ser.write("\x0D")
+      #  if actual == True: ser.write(" " * 20)
+        print("\x0D")
     elif command == "clr":
         if actual == True: ser.write("\xFE\x58")
         print("\xFE\x58")
