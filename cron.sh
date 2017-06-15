@@ -1,8 +1,8 @@
-
-if ps aux | grep python > /dev/null
+numberPythonPrograms=$(ps aux | grep -c python)
+if [ "$numberPythonPrograms" != "1" ]
 then
     echo "Running"
 else
     echo "Stopped"
-	echo -e '\xFE\x46' > /dev/ttyUSB0
+    echo -e '\xFE\x46' > /dev/ttyUSB0
 fi
