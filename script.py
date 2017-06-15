@@ -3,6 +3,7 @@ import json
 import sys
 import urllib2
 import threading
+import random
 # import serial
 # from Adafruit_Thermal import *
 # import RPi.GPIO as GPIO
@@ -38,20 +39,7 @@ class ParkingMeter:
     buttonDebug = True
     buttonPressed = 0
     trigger = threading.Event()
-
-    def send_request(self, category, latitude, longitude):
-        # just print instead of sending get request for now
-        print "Sending request with parameters {{ category: {0}, latitude: {1}, longitude: {2} }}".format(category, latitude, longitude)
-        # await response from server
-        poi_list = [{"name": "Bebop - light sculpture by Bill Culbert"}, {"name": "Garden next to Peacock Fountain"}, {"name": "Kate Sheppard Memorial to Women's Suffrage"}] # mock response for now
-        #response = json.loads(urllib2.urlopen(self.base_url + "/poi-by-category?lat=0&long=0&radiusInMetre=1000000000000&category=" + category).read())
-        #poi_list = response
-        return poi_list
-
-    def get_categories(self):
-        #response = json.loads(urllib2.urlopen(self.base_url + "/category").read())
-        response = [{"name": "Connect with Others"}, {"name": "Savour the Moment"}, {"name": "Play/Be Active"}, {"name": "Keep Learning"}, {"name": "Make a Difference"}]
-        self.categories = response;
+    dataMap = {}
 
     def newLine(self, previousText):
         if self.debug == False: self.ser.write("\x0D")
@@ -99,7 +87,7 @@ class ParkingMeter:
         self.newLCDPage()
         self.display("Printing.....", True)
         print "\n{0}'s sweet free thing is at {1}".format("Bob", "1 Queen Street")
-        print "It is: " + poi.get("name")
+        print "It is: " + poi.get("title")
         print "It is sweet because: It is pretty cool"
         sys.stdout.flush()
         if self.debug == False:
@@ -116,7 +104,7 @@ class ParkingMeter:
             self.printer.underlineOff()
             self.printer.justify('L')
             self.printer.println("{0}'s sweet free thing is at {1}".format("Bob", "1 Queen Street"))
-            self.printer.println("It is: " + poi.get("name"))
+            self.printer.println("It is: " + poi.get("title"))
             self.printer.println("It is sweet because: It is pretty cool")
             self.printer.println("Open today: TODO")
             self.printer.feed(2)
@@ -146,15 +134,18 @@ class ParkingMeter:
         sys.stdout.flush()
         choice = self.get_choice()
         if choice == button["IDEA"]:
-            self.idea_state(0)
+            startPointer = random.randint(0, self.dataMap.get("meta").get("total_count")-1)
+            self.idea_state(startPointer)
         else:
             self.welcome_state()
 
     def idea_state(self, pointer):
         print "ENTERING IDEA STATE"
         self.newLCDPage()
-        poi_list = [{"name": "Bebop - light sculpture by Bill Culbert"}, {"name": "Garden next to Peacock Fountain"}, {"name": "Kate Sheppard Memorial to Women's Suffrage"}] # mock response for now
-        self.display(poi_list[pointer].get("name"), False)
+        # get ideas from json db
+        poi_list = self.dataMap.get("items")
+        # poi_list = [{"name": "Bebop - light sculpture by Bill Culbert"}, {"name": "Garden next to Peacock Fountain"}, {"name": "Kate Sheppard Memorial to Women's Suffrage"}] # mock response for now
+        self.display(poi_list[pointer].get("title"), False)
         sys.stdout.flush()
         nextPointer = pointer + 1
         if nextPointer >= len(poi_list):
@@ -169,6 +160,10 @@ class ParkingMeter:
             self.welcome_state()
             
     def start(self):
+        # read json file
+        with open('data/data_2017_06_15.json', 'r') as file:
+            data=file.read().replace('\n', '')
+        self.dataMap = json.loads(data)
         try:
             print "Note: Set debug=False and uncomment import lines when testing on real rpi"
             print "=============================================="
