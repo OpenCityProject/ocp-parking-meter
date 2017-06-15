@@ -34,8 +34,8 @@ class ParkingMeter:
     base_url = "http://opencityproject.australiasoutheast.cloudapp.azure.com:38080/v1"
     debug = False
     #debug = True
-    buttonDebug = False
-    #buttonDebug = True
+#    buttonDebug = False
+    buttonDebug = True
     buttonPressed = 0
     trigger = threading.Event()
 
