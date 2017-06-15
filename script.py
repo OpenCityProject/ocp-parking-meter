@@ -4,6 +4,7 @@ import sys
 import urllib2
 import threading
 import random
+
 # import serial
 # from Adafruit_Thermal import *
 # import RPi.GPIO as GPIO
@@ -49,7 +50,7 @@ class ParkingMeter:
         # for now just print to console
         print text
         # try send to serial
-        if self.debug == False: self.ser.write(text)
+        if self.debug == False: self.ser.write(text.encode())
         if newLine == True: self.newLine(text)
 
     def newLCDPage(self):
