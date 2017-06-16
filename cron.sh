@@ -4,5 +4,5 @@ then
     echo "Running"
 else
     echo "Stopped"
-	echo -e '\xFE\x46' > /dev/ttyACM0
+	echo -e $'\xFE\x46' > /dev/ttyACM0
 fi
