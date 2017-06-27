@@ -7,14 +7,14 @@ import random
 import subprocess
 import time
 
-# import serial
-# from Adafruit_Thermal import *
-# import RPi.GPIO as GPIO
-# GPIO.setmode(GPIO.BCM)  
-# # GPIO 23 set up as input. It is pulled up to stop false signals  
-# GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
-# GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
-# GPIO.setup(24, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
+import serial
+from Adafruit_Thermal import *
+import RPi.GPIO as GPIO
+GPIO.setmode(GPIO.BCM)  
+# GPIO 23 set up as input. It is pulled up to stop false signals  
+GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
+GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
+GPIO.setup(25, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
 
 # This script is used to call the api then return choices to the user and display on LCD
 # User first selects from a list of pre-defined categories
@@ -40,10 +40,10 @@ class ParkingMeter:
     ser = ""
     printer = ""
     base_url = "http://opencityproject.australiasoutheast.cloudapp.azure.com:38080/v1"
-    #debug = False
-    debug = True
-    #buttonDebug = False
-    buttonDebug = True
+    debug = False
+    #debug = True
+    buttonDebug = False
+#    buttonDebug = True
     buttonPressed = 0
     trigger = threading.Event()
     dataMap = {}
@@ -67,24 +67,21 @@ class ParkingMeter:
         #     if self.debug == False: self.ser.write("\x0A")
         #     print ""
         
-    def buttonOnePressed(self):
+    def buttonOnePressed(self, num):
         self.buttonPressed = 1
         self.trigger.set()
 
-    def buttonTwoPressed(self):
+    def buttonTwoPressed(self, num):
         self.buttonPressed = 2
         self.trigger.set()
         
-    def buttonThreePressed(self):
+    def buttonThreePressed(self, num):
         self.buttonPressed = 3
         self.trigger.set()
 
     def get_choice(self):
         if self.buttonDebug == False:
             self.trigger.clear()
-            GPIO.add_event_detect(17, GPIO.RISING, callback=self.buttonOnePressed)  
-            GPIO.add_event_detect(23, GPIO.RISING, callback=self.buttonTwoPressed)  
-            GPIO.add_event_detect(24, GPIO.RISING, callback=self.buttonThreePressed) 
             self.trigger.wait()
             return self.buttonPressed
         else:
@@ -174,11 +171,15 @@ class ParkingMeter:
             self.idea_state(nextPointer)
         elif choice == button["PRINT"]:
             self.print_ticket(poi_list[pointer])
-            self.sleep_state()
+            self.welcome_state()
         else:
             self.welcome_state()
             
     def start(self):
+        GPIO.add_event_detect(25, GPIO.RISING, callback=self.buttonOnePressed)
+        GPIO.add_event_detect(17, GPIO.RISING, callback=self.buttonTwoPressed)
+        GPIO.add_event_detect(23, GPIO.RISING, callback=self.buttonThreePressed)
+
         # read json file
         with open('data/data_2017_06_15.json', 'r') as file:
             data=file.read().replace('\n', '')
