@@ -4,6 +4,8 @@ import sys
 import urllib2
 import threading
 import random
+import subprocess
+import time
 
 # import serial
 # from Adafruit_Thermal import *
@@ -27,7 +29,11 @@ import random
 # Note: Currently having problems with line wrapping and new line printing on the LCD display
 # Note: Also, the buttons have not been integrated yet, so this script relies on keyboard input solely for now
 
-button = {'START': 1, 'IDEA': 2, 'PRINT': 3};
+button = {'START': 1, 'IDEA': 2, 'PRINT': 3}
+
+PRINTER_GPIO = 27
+GPIO.setup(PRINTER_GPIO, GPIO.OUT, pull_up_down=GPIO.PUD_UP)
+
 
 class ParkingMeter:
     categories = ["Get Back to Nature", "Within 2km", "Give Back to Community", "Today only", "Weekly"]
@@ -84,6 +90,14 @@ class ParkingMeter:
         else:
             return input("") # change this to receive input from buttons on parking machine
 
+    def check_print_cut(self):
+        result = subprocess.check_output(['lpstat', '-o'])
+        while result.find("1st"):
+            time.sleep(0.5)
+        print("pulsing")
+        sys.stdout.flush()        
+        GPIO.output(PRINTER_GPIO, GPIO.LOW)
+
     def print_ticket(self, poi):
         self.newLCDPage()
         self.display("Printing.....", True)
@@ -92,6 +106,9 @@ class ParkingMeter:
         print "It is sweet because: It is pretty cool"
         sys.stdout.flush()
         if self.debug == False:
+            # start checking print queue
+            t1 = threading.Thread(target=self.check_print_cut)
+            t1.start()
             self.printer.wake()       # Call wake() before printing again, even if reset
             self.printer.setDefault() # Restore printer to defaults
             # create ticket file
@@ -114,6 +131,7 @@ class ParkingMeter:
             self.printer.setSize('S')
             self.printer.println("For more info and to share your sweet free thing, see opencity.co.nz")
             self.printer.sleep()# Tell printer to sleep
+            t1.join()
 
     def sleep_state(self):
         print "ENTERING SLEEP STATE"
