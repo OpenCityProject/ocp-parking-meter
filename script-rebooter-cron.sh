@@ -6,6 +6,7 @@ then
    echo "Already running"
 else
    echo "Script stopped. Rebooting"
-   nohup python script.py >/dev/null 2>&1 &
+    cd /home/pi/ocp-parking-meter
+    nohup python /home/pi/ocp-parking-meter/script.py >/dev/null 2>&1 & #background, no nohup.out
 fi
 

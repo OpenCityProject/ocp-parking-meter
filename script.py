@@ -32,7 +32,7 @@ GPIO.setup(25, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 button = {'START': 1, 'IDEA': 2, 'PRINT': 3}
 
 PRINTER_GPIO = 27
-GPIO.setup(PRINTER_GPIO, GPIO.OUT, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(PRINTER_GPIO, GPIO.OUT)
 
 
 class ParkingMeter:
