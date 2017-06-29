@@ -31,8 +31,8 @@ GPIO.setup(25, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 button = {'START': 1, 'IDEA': 2, 'PRINT': 3}
 
-PRINTER_GPIO = 27
-GPIO.setup(PRINTER_GPIO, GPIO.OUT)
+# PRINTER_GPIO = 27
+# GPIO.setup(PRINTER_GPIO, GPIO.OUT)
 
 
 class ParkingMeter:
@@ -87,48 +87,13 @@ class ParkingMeter:
         else:
             return input("") # change this to receive input from buttons on parking machine
 
-    def check_print_cut(self):
-        result = subprocess.check_output(['lpstat', '-o'])
-        while result.find("1st"):
-            time.sleep(0.5)
-        print("pulsing")
-        sys.stdout.flush()        
-        GPIO.output(PRINTER_GPIO, GPIO.LOW)
-
-    def print_ticket(self, poi):
-        self.newLCDPage()
-        self.display("Printing.....", True)
-        print "\n{0}'s sweet free thing is at {1}".format("Bob", "1 Queen Street")
-        print "It is: " + poi.get("title")
-        print "It is sweet because: It is pretty cool"
-        sys.stdout.flush()
-        if self.debug == False:
-            # start checking print queue
-            t1 = threading.Thread(target=self.check_print_cut)
-            t1.start()
-            self.printer.wake()       # Call wake() before printing again, even if reset
-            self.printer.setDefault() # Restore printer to defaults
-            # create ticket file
-            self.printer.justify('C')
-            self.printer.setSize('M')
-            self.printer.println("Open City")
-            self.printer.feed(1)
-            self.printer.setSize('S')
-            self.printer.underlineOn()
-            self.printer.println("Sharing sweet free things to do")
-            self.printer.underlineOff()
-            self.printer.justify('L')
-            self.printer.println("{0}'s sweet free thing is at {1}".format("Bob", "1 Queen Street"))
-            self.printer.println("It is: " + poi.get("title"))
-            self.printer.println("It is sweet because: It is pretty cool")
-            self.printer.println("Open today: TODO")
-            self.printer.feed(2)
-            import gfx.adaqrcode as adaqrcode
-            self.printer.printBitmap(adaqrcode.width, adaqrcode.height, adaqrcode.data)
-            self.printer.setSize('S')
-            self.printer.println("For more info and to share your sweet free thing, see opencity.co.nz")
-            self.printer.sleep()# Tell printer to sleep
-            t1.join()
+    # def check_print_cut(self):
+    #     result = subprocess.check_output(['lpstat', '-o'])
+    #     while result.find("1st"):
+    #         time.sleep(0.5)
+    #     print("pulsing cut")
+    #     sys.stdout.flush()        
+    #     GPIO.output(PRINTER_GPIO, GPIO.LOW) # cut
 
     def sleep_state(self):
         print "ENTERING SLEEP STATE"
@@ -174,6 +139,68 @@ class ParkingMeter:
             self.welcome_state()
         else:
             self.welcome_state()
+
+
+
+    def print_ticket(self, poi):
+        self.newLCDPage()
+        self.display("Printing.....", True)
+        if self.debug == False:
+            # start checking print queue
+            # t1 = threading.Thread(target=self.check_print_cut)
+            # t1.start()
+            printer.wake()       # Call wake() before printing again, even if reset
+            printer.setDefault() # Restore printer to defaults
+
+            ## centre all text - initially small size
+            printer.justify('C')
+            printer.setSize('S')
+
+            ## print logo bitmap
+            import gfx.logo as logo
+            printer.printBitmap(logo.width, logo.height, logo.data)
+            printer.feed(2)
+           # self.printer.println("{0}'s sweet free thing is at {1}".format("Bob", "1 Queen Street"))
+
+            ## first_name, suburb - small bold
+            printer.boldOn()
+            printer.println("{0} from {1} said: ".format(poi.get("first_name"), poi.get("suburb")))
+            printer.boldOff()
+            printer.feed(1)
+
+            ## title - large
+            printer.setSize('L')   # Set type size, accepts 'S', 'M', 'L'
+            printer.println(poi.get("title"))
+            printer.feed(1)
+
+            ## what_makes_it_awesome - normal
+            printer.setSize('S')
+            printer.println(poi.get("what_makes_it_awesome"))
+            printer.feed(2)
+
+            ## small bold
+            printer.boldOn()
+            printer.println("Where is it?")
+            printer.boldOff()
+            printer.feed(1)
+
+            ## address
+            printer.println(poi.get("address"))
+            printer.feed(1)
+            ## how to find
+            printer.println(poi.get("how_to_find"))
+            printer.feed(2)
+
+            printer.println("Distance away: " + poi.get("distance"))  # distance
+            printer.println("Time required: " + poi.get("how_long_to_allow"))  # how_long_to_allow
+            printer.println("Wellbeing: " + poi.get("which_5_way"))  # which_5_way
+            printer.println("Best for: " + poi.get("for_kids"))  # for_kids
+
+            printer.feed(10)
+            printer.setDefault() # Restore printer to defaults
+            printer.sleep()      # Tell printer to sleep
+            # t1.join()
+
             
     def start(self):
         GPIO.add_event_detect(25, GPIO.RISING, callback=self.buttonOnePressed)
