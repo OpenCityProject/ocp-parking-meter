@@ -149,56 +149,56 @@ class ParkingMeter:
             # start checking print queue
             # t1 = threading.Thread(target=self.check_print_cut)
             # t1.start()
-            printer.wake()       # Call wake() before printing again, even if reset
-            printer.setDefault() # Restore printer to defaults
+            self.printer.wake()       # Call wake() before printing again, even if reset
+            self.printer.setDefault() # Restore printer to defaults
 
             ## centre all text - initially small size
-            printer.justify('C')
-            printer.setSize('S')
+            self.printer.justify('C')
+            self.printer.setSize('S')
 
             ## print logo bitmap
             import gfx.logo as logo
-            printer.printBitmap(logo.width, logo.height, logo.data)
-            printer.feed(2)
+            self.printer.printBitmap(logo.width, logo.height, logo.data)
+            self.printer.feed(2)
            # self.printer.println("{0}'s sweet free thing is at {1}".format("Bob", "1 Queen Street"))
 
             ## first_name, suburb - small bold
-            printer.boldOn()
-            printer.println("{0} from {1} said: ".format(poi.get("first_name"), poi.get("suburb")))
-            printer.boldOff()
-            printer.feed(1)
+            self.printer.boldOn()
+            self.printer.println("{0} from {1} said: ".format(poi.get("first_name"), poi.get("suburb")))
+            self.printer.boldOff()
+            self.printer.feed(1)
 
             ## title - large
-            printer.setSize('L')   # Set type size, accepts 'S', 'M', 'L'
-            printer.println(poi.get("title"))
-            printer.feed(1)
+            self.printer.setSize('L')   # Set type size, accepts 'S', 'M', 'L'
+            self.printer.println(poi.get("title"))
+            self.printer.feed(1)
 
             ## what_makes_it_awesome - normal
-            printer.setSize('S')
-            printer.println(poi.get("what_makes_it_awesome"))
-            printer.feed(2)
+            self.printer.setSize('S')
+            self.printer.println(poi.get("what_makes_it_awesome"))
+            self.printer.feed(2)
 
             ## small bold
-            printer.boldOn()
-            printer.println("Where is it?")
-            printer.boldOff()
-            printer.feed(1)
+            self.printer.boldOn()
+            self.printer.println("Where is it?")
+            self.printer.boldOff()
+            self.printer.feed(1)
 
             ## address
-            printer.println(poi.get("address"))
-            printer.feed(1)
+            self.printer.println(poi.get("address"))
+            self.printer.feed(1)
             ## how to find
-            printer.println(poi.get("how_to_find"))
-            printer.feed(2)
+            self.printer.println(poi.get("how_to_find"))
+            self.printer.feed(2)
 
-            printer.println("Distance away: " + poi.get("distance"))  # distance
-            printer.println("Time required: " + poi.get("how_long_to_allow"))  # how_long_to_allow
-            printer.println("Wellbeing: " + poi.get("which_5_way"))  # which_5_way
-            printer.println("Best for: " + poi.get("for_kids"))  # for_kids
+            self.printer.println("Distance away: " + poi.get("distance"))  # distance
+            self.printer.println("Time required: " + poi.get("how_long_to_allow"))  # how_long_to_allow
+            self.printer.println("Wellbeing: " + poi.get("which_5_way"))  # which_5_way
+            self.printer.println("Best for: " + poi.get("for_kids"))  # for_kids
 
-            printer.feed(10)
-            printer.setDefault() # Restore printer to defaults
-            printer.sleep()      # Tell printer to sleep
+            self.printer.feed(10)
+            self.printer.setDefault() # Restore printer to defaults
+            self.printer.sleep()      # Tell printer to sleep
             # t1.join()
 
             
