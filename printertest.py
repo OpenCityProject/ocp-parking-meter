@@ -28,7 +28,7 @@ printer.feed(1)
 
 ## what_makes_it_awesome - normal
 printer.setSize('S')
-printer.println("It’s easy to climb no matter how big or small you are. Plus it looks cool.")
+printer.println("It's easy to climb no matter how big or small you are. Plus it looks cool.")
 printer.feed(2)
 
 ## small bold
