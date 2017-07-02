@@ -6,6 +6,7 @@ import threading
 import random
 import subprocess
 import time
+import textwrap
 
 import serial
 from Adafruit_Thermal import *
@@ -52,20 +53,20 @@ class ParkingMeter:
         if self.debug == False: self.ser.write("\x0D")
      #   if self.debug == False: self.ser.write(" " * (20 - len(previousText)))
 
-    def display(self, text, newLine):
-        # for now just print to console
-        print text
-        # try send to serial
-        if self.debug == False: self.ser.write(text.encode())
-        if newLine == True: self.newLine(text)
+    def display(self, raw_text):
+        text_array = textwrap.wrap(raw_text, 18)
+        i = 0
+        while i < len(text_array) and i < 4: # max 4 lines
+            text = text_array[i]
+            print text
+            # try send to serial
+            if self.debug == False: self.ser.write(text.encode())
+            self.newLine(text)
+            i += 1
 
     def newLCDPage(self):
         print("============== NEW PAGE =================")
         if self.debug == False: self.ser.write("\xFE\x58")
-        # self.ser.write("\xFE\x58")
-        # for i in range(numberOfLinesRemaining):
-        #     if self.debug == False: self.ser.write("\x0A")
-        #     print ""
         
     def buttonOnePressed(self, num):
         self.buttonPressed = 1
@@ -107,10 +108,7 @@ class ParkingMeter:
         if self.debug == False: self.ser.write("\xFE\x42")
         self.newLCDPage()
         print "============================================="
-        self.display("Welcome to the", True)
-        self.display("Open City Project!", True)
-        self.display("Sharing sweet", True)
-        self.display("things to do", False)
+        self.display("Welcome to the Open City Project! Sharing sweet things to do")
         print "============================================="
         sys.stdout.flush()
         choice = self.get_choice()
@@ -126,7 +124,7 @@ class ParkingMeter:
         # get ideas from json db
         poi_list = self.dataMap.get("items")
         # poi_list = [{"name": "Bebop - light sculpture by Bill Culbert"}, {"name": "Garden next to Peacock Fountain"}, {"name": "Kate Sheppard Memorial to Women's Suffrage"}] # mock response for now
-        self.display(poi_list[pointer].get("title"), False)
+        self.display(poi_list[pointer].get("title"))
         sys.stdout.flush()
         nextPointer = pointer + 1
         if nextPointer >= len(poi_list):
@@ -144,7 +142,7 @@ class ParkingMeter:
 
     def print_ticket(self, poi):
         self.newLCDPage()
-        self.display("Printing.....", True)
+        self.display("Printing.....")
         if self.debug == False:
             # start checking print queue
             # t1 = threading.Thread(target=self.check_print_cut)
@@ -164,18 +162,18 @@ class ParkingMeter:
 
             ## first_name, suburb - small bold
             self.printer.boldOn()
-            self.printer.println("{0} from {1} said: ".format(poi.get("first_name"), poi.get("suburb")))
+            self.printer.println(textwrap.fill("{0} from {1} said: ".format(poi.get("first_name"), poi.get("suburb")),32))
             self.printer.boldOff()
             self.printer.feed(1)
 
             ## title - large
             self.printer.setSize('L')   # Set type size, accepts 'S', 'M', 'L'
-            self.printer.println(poi.get("title"))
+            self.printer.println(textwrap.fill(poi.get("title"), 16))
             self.printer.feed(1)
 
             ## what_makes_it_awesome - normal
             self.printer.setSize('S')
-            self.printer.println(poi.get("what_makes_it_awesome"))
+            self.printer.println(textwrap.fill(poi.get("what_makes_it_awesome"), 32))
             self.printer.feed(2)
 
             ## small bold
@@ -185,10 +183,10 @@ class ParkingMeter:
             self.printer.feed(1)
 
             ## address
-            self.printer.println(poi.get("address"))
+            self.printer.println(textwrap.fill(poi.get("address"),32))
             self.printer.feed(1)
             ## how to find
-            self.printer.println(poi.get("how_to_find"))
+            self.printer.println(textwrap.fill(poi.get("how_to_find"), 32))
             self.printer.feed(2)
 
             self.printer.println("Distance away: " + poi.get("distance"))  # distance
