@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # first kill script running
-killall -9 script.py
+killall -9 python
 
 # now call python script to load data
 python data-collector.py
