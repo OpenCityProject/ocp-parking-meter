@@ -5,7 +5,7 @@ import urllib2
 import datetime
 
 class DataCollector:
-    base_url = "http://opencity.org.nz/api/v2/parking_box/"
+    base_url = "https://beta.opencity.org.nz/api/v2/parking_box/"
 
     def start(self):
         print "Sending request to ocp server"
