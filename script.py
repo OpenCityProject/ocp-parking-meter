@@ -7,7 +7,7 @@ import random
 import subprocess
 import time
 import textwrap
-import datetime
+# import datetime
 
 import serial
 from Adafruit_Thermal import *
@@ -209,8 +209,8 @@ class ParkingMeter:
         if self.buttonDebug == False: GPIO.add_event_detect(23, GPIO.RISING, callback=self.buttonThreePressed)
 
         # read json file
-        date = datetime.datetime.now().strftime ("%Y_%m_%d")
-        with open("data/data_" + date + ".json", 'r') as file:
+        # date = datetime.datetime.now().strftime ("%Y_%m_%d")
+        with open("data/data.json", 'r') as file:
             data=file.read().replace('\n', '')
         self.dataMap = json.loads(data)
         try:
