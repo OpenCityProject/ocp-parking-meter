@@ -12,5 +12,5 @@ import textwrap
 # print(logo.data)
 # sys.stdout.flush()
 
-print(textwrap.fill("Welcome to the Open City Project! Sharing sweet things to do", 18))
+print(textwrap.fill("Walkway beside the river (test)", 16))
 sys.stdout.flush()
