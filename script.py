@@ -7,15 +7,16 @@ import random
 import subprocess
 import time
 import textwrap
+import datetime
 
-import serial
-from Adafruit_Thermal import *
-import RPi.GPIO as GPIO
-GPIO.setmode(GPIO.BCM)  
-# GPIO 23 set up as input. It is pulled up to stop false signals  
-GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
-GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
-GPIO.setup(25, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
+# import serial
+# from Adafruit_Thermal import *
+# import RPi.GPIO as GPIO
+# GPIO.setmode(GPIO.BCM)  
+# # GPIO 23 set up as input. It is pulled up to stop false signals  
+# GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
+# GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
+# GPIO.setup(25, GPIO.IN, pull_up_down=GPIO.PUD_UP)  
 
 # This script is used to call the api then return choices to the user and display on LCD
 # User first selects from a list of pre-defined categories
@@ -41,10 +42,10 @@ class ParkingMeter:
     ser = ""
     printer = ""
     base_url = "http://opencityproject.australiasoutheast.cloudapp.azure.com:38080/v1"
-    debug = False
-    #debug = True
-    buttonDebug = False
-#    buttonDebug = True
+#    debug = False
+    debug = True
+#    buttonDebug = False
+    buttonDebug = True
     buttonPressed = 0
     trigger = threading.Event()
     dataMap = {}
@@ -112,8 +113,8 @@ class ParkingMeter:
         print "============================================="
         sys.stdout.flush()
         choice = self.get_choice()
-        if choice == button["IDEA"]:
-            startPointer = random.randint(0, self.dataMap.get("meta").get("total_count")-1)
+        if choice == button["IDEA"] or choice == button["START"]:
+            startPointer = random.randint(0, len(self.dataMap.get("items"))-1)            
             self.idea_state(startPointer)
         else:
             self.welcome_state()
@@ -142,7 +143,8 @@ class ParkingMeter:
 
     def print_ticket(self, poi):
         self.newLCDPage()
-        self.display("Printing.....")
+        self.display("Printing your mission...")
+        self.display("Grab it from the slot below!")
         if self.debug == False:
             # start checking print queue
             # t1 = threading.Thread(target=self.check_print_cut)
@@ -202,12 +204,13 @@ class ParkingMeter:
 
             
     def start(self):
-        GPIO.add_event_detect(25, GPIO.RISING, callback=self.buttonOnePressed)
-        GPIO.add_event_detect(17, GPIO.RISING, callback=self.buttonTwoPressed)
-        GPIO.add_event_detect(23, GPIO.RISING, callback=self.buttonThreePressed)
+        if self.buttonDebug == False: GPIO.add_event_detect(25, GPIO.RISING, callback=self.buttonOnePressed)
+        if self.buttonDebug == False: GPIO.add_event_detect(17, GPIO.RISING, callback=self.buttonTwoPressed)
+        if self.buttonDebug == False: GPIO.add_event_detect(23, GPIO.RISING, callback=self.buttonThreePressed)
 
         # read json file
-        with open('data/data_2017_06_15.json', 'r') as file:
+        date = datetime.datetime.now().strftime ("%Y_%m_%d")
+        with open("data/data_" + date + ".json", 'r') as file:
             data=file.read().replace('\n', '')
         self.dataMap = json.loads(data)
         try:
