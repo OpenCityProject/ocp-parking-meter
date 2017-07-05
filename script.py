@@ -227,6 +227,12 @@ class ParkingMeter:
             if self.debug == False: self.printer.setDefault()
             if self.debug == False: self.ser = serial.Serial('/dev/ttyACM0', 115200)
 
+            ## CONTRAST AND BRIGHTNESS
+            # set contrast to 220 (0xDC)
+            if self.debug == False: self.ser.write("\xFE\x50\xDC")
+            # set brightness to 100 (0x64) 
+            # if self.debug == False: self.ser.write("\xFE\x99\x64")
+            
             self.sleep_state()
        
         except KeyboardInterrupt, Exception:
