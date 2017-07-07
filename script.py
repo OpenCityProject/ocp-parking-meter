@@ -151,7 +151,7 @@ class ParkingMeter:
             # t1.start()
             self.printer.wake()       # Call wake() before printing again, even if reset
             self.printer.setDefault() # Restore printer to defaults
-            self.printer.println("\x1B\x37\x09\xA0\02") # set darkness ESC 7 (DP-58C-V2.1-specification)
+            self.printer.println("\x1B\x37\x09\x78\02") # set darkness ESC 7 (DP-58C-V2.1-specification)
 
             ## centre all text - initially small size
             self.printer.justify('C')
