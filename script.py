@@ -6,8 +6,9 @@ import threading
 import random
 import subprocess
 import time
+import time
 import textwrap
-# import datetime
+from datetime import datetime
 
 import serial
 from Adafruit_Thermal import *
@@ -202,6 +203,10 @@ class ParkingMeter:
             self.printer.setDefault() # Restore printer to defaults
             self.printer.sleep()      # Tell printer to sleep
             # t1.join()
+
+            # log
+            with open("log.txt", "a") as log:
+                log.write(str(datetime.now()) + " - " + poi.get("title"))
 
             
     def start(self):
