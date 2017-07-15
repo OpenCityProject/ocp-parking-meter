@@ -206,7 +206,7 @@ class ParkingMeter:
 
             # log
             with open("log.txt", "a") as log:
-                log.write(str(datetime.now()) + " - " + poi.get("title"))
+                log.write(str(datetime.now()) + " - " + poi.get("title") + "\n")
 
             
     def start(self):
